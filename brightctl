@@ -1,0 +1,210 @@
+#!/bin/bash
+
+## Default controller values
+BRIGHTNESS_CONTROLLER="light"
+INCREASE_FLAG="-A"
+DECREASE_FLAG="-U"
+SET_BRIGHTNESS_FLAG="-S"
+GET_BRIGHTNESS_FLAG="-G"
+ADDITIONAL_FLAGS=()
+
+
+## Default values
+NOTIFICATION_ENABLED=1
+NOTIFICATION_TIMEOUT=3000
+
+CONFIG_PATH="$XDG_CONFIG_HOME"
+VERBOSE=0
+
+NORMAL_DELTA=5
+BIG_DELTA=10
+BRIGTHNESS_MAX=100
+BRIGTHNESS_MIN=0.1
+
+## Args
+OPTIONAL_FLAGS=("--notification-timeout" "-v" "--verbose" "-c" "--config" "-n" "--notifcation" "-N" "--no-notification" "-h" "--help")
+
+verbose () {
+    [[ $VERBOSE -eq 1 ]] && return 0 || return 1
+}
+
+notify () {
+    local brightness=$(get_brightness | sed 's/\..*$//')
+    local cmd="dunstify -h int:value:$brightness -t $NOTIFICATION_TIMEOUT -h string:x-dunst-stack-tag:volume -i \"xfpm-brightness-lcd\" \"Brightness ($brightness%)\""
+    [[ $NOTIFICATION_ENABLED -eq 1 ]] && sh -c "$cmd"
+    verbose && ( [[ $NOTIFICATION_ENABLED -eq 1 ]] && echo "Notified with \`$cmd\`" || echo "Didn't notify" )
+}
+
+brightness_up_by () {
+    local cmd="$BRIGHTNESS_CONTROLLER ${ADDITIONAL_FLAGS[@]} $INCREASE_FLAG $1"
+
+    verbose && echo "Increasing brightness by $1, with \`$cmd\`"
+
+    verbose && echo "Brightness before command: $(get_brightness)"
+    sh -c "$cmd"
+    verbose && echo "Brightness after command: $(get_brightness)"
+
+    notify
+}
+
+brightness_down_by () {
+    local cmd="$BRIGHTNESS_CONTROLLER ${ADDITIONAL_FLAGS[@]} $DECREASE_FLAG $1"
+
+    verbose && echo "Decreasing brightness by $1, with \`$cmd\`"
+
+    verbose && echo "Brightness before command: $(get_brightness)"
+    sh -c "$cmd"
+    verbose && echo "Brightness after command: $(get_brightness)"
+
+    notify
+}
+
+brightness_set () {
+    local cmd="$BRIGHTNESS_CONTROLLER ${ADDITIONAL_FLAGS[@]} $SET_BRIGHTNESS_FLAG $1"
+    verbose && echo "Setting the brightness to $1, with \`$cmd\`"
+   
+    verbose && echo "Brightness before command: $(get_volume)"
+    sh -c "$cmd"
+    verbose && echo "Brightness after command: $(get_volume)"
+
+    notify
+}
+
+brightness_up () {
+    local cmd="brightness_up_by $NORMAL_DELTA"
+    verbose && echo "Increasing the volume, with \`$cmd\`"
+    $cmd
+}
+
+brightness_down () {
+    local cmd="brightness_down_by $NORMAL_DELTA"
+    verbose && echo "Increasing the volume, with \`$cmd\`"
+    $cmd
+}
+
+brightness_big_up () {
+    local cmd="brightness_up_by $BIG_DELTA"
+    verbose && echo "Increasing the volume, with \`$cmd\`"
+    $cmd
+}
+
+brightness_big_down () {
+    local cmd="brightness_down_by $BIG_DELTA"
+    verbose && echo "Increasing the volume, with \`$cmd\`"
+    $cmd
+}
+
+get_brightness () {
+    sh -c "$BRIGHTNESS_CONTROLLER ${ADDITIONAL_FLAGS[@]} $GET_VOLUME_FLAG"
+}
+
+
+usage() {
+    cat << EOF
+volumectl - A configurable bash script that makes your life easier in controlling the brightness of your screen and 
+notifying it at the same time.
+
+Usage:  brightctl [-v|--verbose] [-c|--config path] [-n|-N] -option [arg]      
+
+Options:
+    -i [arg], --increase [arg]          increase the brightness by the "normal" amount or by the [arg] amount
+    -d [arg], --decrease [arg]          decrease the brightness by the "normal" amount or by the [arg] amount
+    -I, --big-increase                  increase the brightness by the "big" amount
+    -D, --big-decrease                  decrease the brightness by the "big" amount
+    -s arg, --set arg                   set brightness to arg
+    --set-min-brightness                set brightness to minimum
+    --set-max-brightness                set brightness to maximum
+
+Optional arguments:
+    --notification-timeout arg          forces the notification timeout, in milliseconds (overrides the configuation setting,
+                                        the default value is $NOTIFICATION_TIMEOUT)
+    -n, --notification                  forces the notification to appear (overrides the configuration setting)
+    -N, --no-notification               forces the notification NOT to appear (overrides the configuration setting)
+    -v, --verbose                       print each step the script passes through
+    -h, -?, --help                      show this message
+EOF
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then #if '__name__' == '__main__'
+    # check if the notification is being forced or not
+    
+    while [[ " ${OPTIONAL_FLAGS[@]} " =~ " $1 " ]]; do
+        verbose && echo "Checking for optional arguments"
+
+        case $1 in 
+            -v|--verbose)
+                VERBOSE=1
+                verbose && echo "Setting \$VERBOSE to true (\$VERBOSE=$VERBOSE)"
+                shift
+                ;;
+            --notification-timeout)
+                NOTIFICATION_TIMEOUT="$2";
+                verbose && echo "Setting \$NOTIFICATION_TIMEOUT to $2 (\$NOTIFICATION_TIMEOUT=$NOTIFICATION_TIMEOUT)"
+                shift 2
+                ;;
+            -c|--config)
+                CONFIG_PATH="$2";
+                verbose && echo "Setting \$CONFIG_PATH to $2 (\$CONFIG_PATH=$CONFIG_PATH)"
+                shift 2
+                ;;
+            -n|--notification)
+                NOTIFICATION_ENABLED=1
+                verbose && echo "Setting \$NOTIFICATION_ENABLED to true (\$NOTIFICATION_ENABLED=$NOTIFICATION_ENABLED)"
+                shift
+                ;;
+            -N|--no-notification)
+                NOTIFICATION_ENABLED=0;
+                verbose && echo "Setting \$NOTIFICATION_ENABLED to false (\$NOTIFICATION_ENABLED=$NOTIFICATION_ENABLED)"
+                shift
+                ;;
+            -h|-\?|--help)
+                verbose && echo "Detected -h, -? or --help"
+                usage
+                shift
+                ;;
+        esac
+    done
+
+    verbose && echo "Looking at the argument '$@'"
+    case $1 in 
+        -i|--increase) 
+            verbose && echo "Detected -i or --increase, with argument '$2'"
+            [[ -z "$2" ]] && brightness_up || brightness_up_by $2
+            ;;
+        -I|--big-increase) 
+            verbose && echo "Detected -I or --big-increase"
+            brightness_big_up
+            ;;
+        -d|--decrease) 
+            verbose && echo "Detected -d or --decrease, with argument '$2'"
+            [[ -z "$2" ]] && brightness_down || brightness_down_by $2
+            ;;
+        -D|--big-decrease) 
+            verbose && echo "Detected -D or --big-decrease"
+            brightness_big_down
+            ;;
+        -s|--set-brightness)
+            verbose && echo "Detected -s or --set-brightness, with argument '$2'"
+            [[ -z "$2" ]] && echo "Error, missing value to set brightness" 1>&2 && exit 1 || brightness_set $2
+            ;;
+        --set-min-brightness)
+            verbose && echo "Detected --set-min-brightness"
+            brightness_set $BRIGTHNESS_MIN
+            ;;
+        --set-max-brightness)
+            verbose && echo "Detected --set-min-brightness"
+            brightness_set $BRIGTHNESS_MAX
+            ;;
+        -g|--get-brightness) 
+            verbose && echo "Detected -g or --get-brightness"
+            get_brightness
+            ;;
+        "")
+            usage
+            ;;
+        *)
+            echo "Unrecognized '$1' flag or argument"
+            echo "Try 'volumectl -h' for more information"
+            ;;
+    esac
+fi
