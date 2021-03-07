@@ -197,7 +197,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then #if '__name__' == '__main__'
                 shift
                 ;;
             -c|--config)
-                [[ -f "$2" ]] && CONFIG_PATH="$2" || echo "Error: the config file given '$2' doesn't exists." 1>&2 && exit 1
+                [[ -f "$2" ]] && CONFIG_PATH="$2" || (echo "Error: the config file given '$2' doesn't exists." 1>&2 && exit 1)
                 verbose && echo "Setting \$CONFIG_PATH to $2 (\$CONFIG_PATH=$CONFIG_PATH)"
                 shift 2
                 ;;
