@@ -97,7 +97,7 @@ checkout_config () {
 
 notify () {
     local brightness=$(get_brightness | sed 's/\..*$//')
-    local cmd="dunstify -h int:value:$brightness -t $NOTIFICATION_TIMEOUT -h string:x-dunst-stack-tag:volume -i \"xfpm-brightness-lcd\" \"Brightness ($brightness%)\""
+    local cmd="dunstify -h int:value:$brightness -t $NOTIFICATION_TIMEOUT -h string:x-dunst-stack-tag:bright -i \"xfpm-brightness-lcd\" \"Brightness ($brightness%)\""
     [[ $NOTIFICATION_ENABLED -eq 1 ]] && sh -c "$cmd"
     # verbose && ( [[ $NOTIFICATION_ENABLED -eq 1 ]] && echo "Notified with \`$cmd\`" || echo "Didn't notify" )
 }
@@ -130,45 +130,45 @@ brightness_set () {
     local cmd="$BRIGHTNESS_CONTROLLER ${ADDITIONAL_FLAGS[@]} $SET_BRIGHTNESS_FLAG $1"
     verbose && echo "Setting the brightness to $1, with \`$cmd\`"
    
-    verbose && echo "Brightness before command: $(get_volume)"
+    verbose && echo "Brightness before command: $(get_brightness)"
     sh -c "$cmd"
-    verbose && echo "Brightness after command: $(get_volume)"
+    verbose && echo "Brightness after command: $(get_brightness)"
 
     notify
 }
 
 brightness_up () {
     local cmd="brightness_up_by $NORMAL_DELTA"
-    verbose && echo "Increasing the volume, with \`$cmd\`"
+    verbose && echo "Increasing the brightness, with \`$cmd\`"
     $cmd
 }
 
 brightness_down () {
     local cmd="brightness_down_by $NORMAL_DELTA"
-    verbose && echo "Increasing the volume, with \`$cmd\`"
+    verbose && echo "Increasing the brightness, with \`$cmd\`"
     $cmd
 }
 
 brightness_big_up () {
     local cmd="brightness_up_by $BIG_DELTA"
-    verbose && echo "Increasing the volume, with \`$cmd\`"
+    verbose && echo "Increasing the brightness, with \`$cmd\`"
     $cmd
 }
 
 brightness_big_down () {
     local cmd="brightness_down_by $BIG_DELTA"
-    verbose && echo "Increasing the volume, with \`$cmd\`"
+    verbose && echo "Increasing the brightness, with \`$cmd\`"
     $cmd
 }
 
 get_brightness () {
-    sh -c "$BRIGHTNESS_CONTROLLER ${ADDITIONAL_FLAGS[@]} $GET_VOLUME_FLAG"
+    sh -c "$BRIGHTNESS_CONTROLLER ${ADDITIONAL_FLAGS[@]} $GET_BRIGHTNESS_FLAG"
 }
 
 
 usage() {
     cat << EOF
-volumectl - A configurable bash script that makes your life easier in controlling the brightness of your screen and 
+brightctl - A configurable bash script that makes your life easier in controlling the brightness of your screen and 
 notifying it at the same time.
 
 Usage:  brightctl [-v|--verbose] [-c|--config path] [-n|-N] -option [arg]      
@@ -255,7 +255,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then #if '__name__' == '__main__'
             ;;
         *)
             echo "Unrecognized '$1' flag or argument"
-            echo "Try 'volumectl -h' for more information"
+            echo "Try 'brightctl -h' for more information"
             ;;
     esac
 fi
