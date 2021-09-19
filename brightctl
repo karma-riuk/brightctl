@@ -15,8 +15,6 @@ DEFAULT_NOTIFICATION_TIMEOUT=3000
 
 DEFAULT_NORMAL_DELTA=5
 DEFAULT_BIG_DELTA=10
-DEFAULT_BRIGTHNESS_MAX=100
-DEFAULT_BRIGTHNESS_MIN=0.1
 
 VERBOSE=0
 
@@ -72,8 +70,6 @@ checkout_config () {
 
     NORMAL_DELTA=${INI__Controller__normal_delta:-$DEFAULT_NORMAL_DELTA}
     BIG_DELTA=${INI__Controller__big_delta:-$DEFAULT_BIG_DELTA}
-    BRIGTHNESS_MAX=${INI__Controller__brigthness_max:-$DEFAULT_BRIGTHNESS_MAX}
-    BRIGTHNESS_MIN=${INI__Controller__brigthness_min:-$DEFAULT_BRIGTHNESS_MIN}
 
     NOTIFICATION_ENABLED=${INI__Notification__enabled:-$DEFAULT_NOTIFICATION_ENABLED}
     NOTIFICATION_TIMEOUT=${INI__Notification__timeout:-$DEFAULT_NOTIFICATION_TIMEOUT}
@@ -87,8 +83,6 @@ checkout_config () {
         echo "ADDITIONAL_FLAGS: '$ADDITIONAL_FLAGS'" && \
         echo "NORMAL_DELTA: '$NORMAL_DELTA'" && \
         echo "BIG_DELTA: '$BIG_DELTA'" && \
-        echo "BRIGTHNESS_MAX: '$BRIGTHNESS_MAX'" && \
-        echo "BRIGTHNESS_MIN: '$BRIGTHNESS_MIN'" && \
         echo "NOTIFICATION_ENABLED: '$NOTIFICATION_ENABLED'" && \
         echo "NOTIFICATION_TIMEOUT: '$NOTIFICATION_TIMEOUT'" && \
         echo ""
@@ -179,8 +173,6 @@ Options:
     -I, --big-increase                  increase the brightness by the "big" amount
     -D, --big-decrease                  decrease the brightness by the "big" amount
     -s arg, --set arg                   set brightness to arg
-    --set-min-brightness                set brightness to minimum
-    --set-max-brightness                set brightness to maximum
 
 Optional arguments:
     -c path, --config path              instead of reading from the default location ($CONFIG_PATH),
@@ -237,14 +229,6 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then #if '__name__' == '__main__'
         -s|--set-brightness)
             verbose && echo "Detected -s or --set-brightness, with argument '$2'"
             [[ -z "$2" ]] && echo "Error, missing value to set brightness" 1>&2 && exit 1 || brightness_set $2
-            ;;
-        --set-min-brightness)
-            verbose && echo "Detected --set-min-brightness"
-            brightness_set $BRIGTHNESS_MIN
-            ;;
-        --set-max-brightness)
-            verbose && echo "Detected --set-min-brightness"
-            brightness_set $BRIGTHNESS_MAX
             ;;
         -g|--get-brightness) 
             verbose && echo "Detected -g or --get-brightness"
