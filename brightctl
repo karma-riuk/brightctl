@@ -167,7 +167,7 @@ get_brightness () {
 
 
 usage() {
-    cat << EOF
+    cat <<EOF
 brightctl - A configurable bash script that makes your life easier in controlling the brightness of your screen and 
 notifying it at the same time.
 
@@ -209,7 +209,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then #if '__name__' == '__main__'
             -h|-\?|--help)
                 verbose && echo "Detected -h, -? or --help"
                 usage
-                shift
+                exit
                 ;;
         esac
     done
